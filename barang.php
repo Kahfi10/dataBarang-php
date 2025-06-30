@@ -9,7 +9,7 @@ if (isset($_POST['tambah'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
-    if (mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga) VALUES ('$nama', '$jumlah', '$harga')")) {
+    if (tambahBarang($conn, $nama, $jumlah, $harga)) {
         $notif = 'Data berhasil ditambahkan!';
     } else {
         $notif = 'Gagal menambah data!';
@@ -24,7 +24,7 @@ if (isset($_POST['update'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
-    if (mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga' WHERE id=$id")) {
+    if (updateBarang($conn, $id, $nama, $jumlah, $harga)) {
         $notif = 'Data berhasil diupdate!';
     } else {
         $notif = 'Gagal update data!';
@@ -51,6 +51,15 @@ if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $q = mysqli_query($conn, "SELECT * FROM barang WHERE id=$id");
     $edit = mysqli_fetch_assoc($q);
+}
+
+// Tambahan function untuk tambah dan update barang
+function tambahBarang($conn, $nama, $jumlah, $harga) {
+    return mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga) VALUES ('$nama', '$jumlah', '$harga')");
+}
+
+function updateBarang($conn, $id, $nama, $jumlah, $harga) {
+    return mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga' WHERE id=$id");
 }
 ?>
 <!DOCTYPE html>
@@ -163,7 +172,7 @@ if (isset($_GET['edit'])) {
         });
     <?php endif; ?>
 
-    // Modal konfirmasi hapus
+    // untuk konfirmasi hapus
     document.querySelectorAll('.hapus-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -179,7 +188,7 @@ if (isset($_GET['edit'])) {
         });
     });
 
-    // Tutup modal jika klik di luar box
+    // button tutup jika klik di luar box
     document.getElementById('modal').addEventListener('click', function(e) {
         if (e.target === this) this.style.display = 'none';
     });
