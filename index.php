@@ -14,7 +14,7 @@ if (isset($_POST['tambah'])) {
     } else {
         $notif = 'Gagal menambah data!';
     }
-    header("Location: barang.php?notif=" . urlencode($notif));
+    header("Location: index.php?notif=" . urlencode($notif));
     exit;
 }
 
@@ -29,7 +29,7 @@ if (isset($_POST['update'])) {
     } else {
         $notif = 'Gagal update data!';
     }
-    header("Location: barang.php?notif=" . urlencode($notif));
+    header("Location: index.php?notif=" . urlencode($notif));
     exit;
 }
 
@@ -41,7 +41,7 @@ if (isset($_GET['hapus'])) {
     } else {
         $notif = 'Gagal menghapus data!';
     }
-    header("Location: barang.php?notif=" . urlencode($notif));
+    header("Location: index.php?notif=" . urlencode($notif));
     exit;
 }
 
@@ -51,6 +51,13 @@ if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
     $q = mysqli_query($conn, "SELECT * FROM barang WHERE id=$id");
     $edit = mysqli_fetch_assoc($q);
+}
+
+// Search functionality
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$searchQuery = '';
+if (!empty($search)) {
+    $searchQuery = "WHERE nama LIKE '%$search%' OR jumlah LIKE '%$search%' OR harga LIKE '%$search%'";
 }
 
 // Tambahan function untuk tambah dan update barang
@@ -68,9 +75,11 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
     <title>Data Barang</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
-        h2 { text-align: center; margin-top: 20px; font-size: 30px; }
-        form { background: #fff; max-width: 400px; margin: 40px auto; padding: 24px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);}
+        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #333; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        h2 { text-align: center; margin-top: 10px; font-size: 30px; }
+        form { background: #fff; max-width: 400px; margin: 30px auto; padding: 24px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);}
         label { display: block; margin-top: 16px; font-size: 18px; }
+        .search-info { text-align: center; color: #666; margin: 10px 0; font-size: 16px; }
         input[type="text"], input[type="number"] {font-size: 15px; width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
         button { margin-top: 22px; padding: 10px 24px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;}
         button:hover { background: #217dbb; }
@@ -82,6 +91,38 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         .header { background: #f2f2f2; text-align: center; font-size: 13px; }
         .tabel-row { font-size: large; transition: background 0.2s; }
         .tabel-row:hover { background: #e3f2fd; }
+        /* Search Box */
+        .search-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .search-box input[type="text"] {
+            flex: 1;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .search-box button {
+            margin-top: 0;
+            padding: 8px 16px;
+            background: #27ae60;
+        }
+        .search-box button:hover {
+            background: #219a52;
+        }
+        .search-info {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+        }
         /* Notifikasi */
         .notif {
             display: none;
@@ -108,6 +149,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
     </style>
 </head>
 <body>
+    <h1>Pendataan Barang TOKOKU</h1>
     <div id="notif" class="notif"></div>
     <div id="modal" class="modal-bg">
         <div class="modal-box">
@@ -116,6 +158,21 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             <button id="modal-no" style="background:#aaa;">Batal</button>
         </div>
     </div>
+    
+    <!-- Search Box -->
+    <div class="search-container">
+        <form method="get" class="search-box">
+            <input type="text" name="search" placeholder="Cari barang..." value="<?= htmlspecialchars($search) ?>">
+            <button type="submit">Cari</button>
+            <?php if (!empty($search)): ?>
+                <a href="index.php" style="justify-content:center; align-items:center;font-size:10px; padding: 16px 16px; background: #e74c3c; color: white; text-decoration: none; border-radius: 4px;">Reset</a>
+            <?php endif; ?>
+        </form>
+        <?php if (!empty($search)): ?>
+            <div class="search-info">Hasil pencarian untuk: "<strong><?= htmlspecialchars($search) ?></strong>"</div>
+        <?php endif; ?>
+    </div>
+
     <form method="post" autocomplete="off">
         <h2><?= $edit ? 'Edit Barang' : 'Tambah Barang' ?></h2>
         <?php if ($edit): ?>
@@ -131,7 +188,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             <?= $edit ? 'Update' : 'Simpan' ?>
         </button>
         <?php if ($edit): ?>
-            <a href="barang.php" style="margin-left:10px;">Batal</a>
+            <a href="index.php" style="margin-left:10px;">Batal</a>
         <?php endif; ?>
     </form>
 
@@ -142,21 +199,40 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         </tr>
         <?php
         $no = 1;
-        $barang = mysqli_query($conn, "SELECT * FROM barang");
-        while ($row = mysqli_fetch_assoc($barang)):
+        $barang = mysqli_query($conn, "SELECT * FROM barang $searchQuery ORDER BY id DESC");
+        $totalRows = mysqli_num_rows($barang);
+        
+        if ($totalRows > 0) {
+            while ($row = mysqli_fetch_assoc($barang)):
         ?>
         <tr class="tabel-row">
             <td><?= $no++ ?></td>
             <td><?= htmlspecialchars($row['nama']) ?></td>
             <td><?= $row['jumlah'] ?></td>
-            <td><?= $row['harga'] ?></td>
+            <td><?= number_format($row['harga']) ?></td>
             <td>
-                <a href="barang.php?edit=<?= $row['id'] ?>">Edit</a> | 
+                <a href="index.php?edit=<?= $row['id'] ?>">Edit</a> | 
                 <a href="#" class="hapus-link" data-id="<?= $row['id'] ?>">Hapus</a>
             </td>
         </tr>
-        <?php endwhile; ?>
+        <?php 
+            endwhile;
+        } else {
+        ?>
+        <tr>
+            <td colspan="5" style="text-align: center; color: #666; font-style: italic;">
+                <?= !empty($search) ? "Tidak ada data yang ditemukan untuk '$search'" : "Belum ada data barang" ?>
+            </td>
+        </tr>
+        <?php } ?>
     </table>
+    
+    <?php if (!empty($search) && $totalRows > 0): ?>
+        <div style="text-align: center; margin: 20px 0; color: #666;">
+            Menampilkan <?= $totalRows ?> hasil
+        </div>
+    <?php endif; ?>
+
     <script>
     // Notifikasi dari PHP
     <?php if (isset($_GET['notif'])): ?>
@@ -180,7 +256,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             var modal = document.getElementById('modal');
             modal.style.display = 'flex';
             document.getElementById('modal-yes').onclick = function() {
-                window.location = 'barang.php?hapus=' + id;
+                window.location = 'index.php?hapus=' + id;
             };
             document.getElementById('modal-no').onclick = function() {
                 modal.style.display = 'none';
