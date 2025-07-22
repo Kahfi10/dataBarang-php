@@ -1,15 +1,39 @@
 <?php
+
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit;
+}
+
 // Koneksi database
 $conn = mysqli_connect("localhost", "root", "", "form");
 if (!$conn) die("Koneksi gagal: " . mysqli_connect_error());
 
 $notif = '';
+$uploadDir = "uploads/";
+
 // Tambah data
 if (isset($_POST['tambah'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
-    if (tambahBarang($conn, $nama, $jumlah, $harga)) {
+    $gambar = '';
+
+    // Upload gambar jika ada
+    if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0) {
+        $ext = strtolower(pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($ext, $allowed)) {
+            if (!is_dir($uploadDir)) mkdir($uploadDir);
+            $newName = uniqid('img_', true) . '.' . $ext;
+            if (move_uploaded_file($_FILES['gambar']['tmp_name'], $uploadDir . $newName)) {
+                $gambar = $newName;
+            }
+        }
+    }
+
+    if (tambahBarang($conn, $nama, $jumlah, $harga, $gambar)) {
         $notif = 'Data berhasil ditambahkan!';
     } else {
         $notif = 'Gagal menambah data!';
@@ -24,7 +48,24 @@ if (isset($_POST['update'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
-    if (updateBarang($conn, $id, $nama, $jumlah, $harga)) {
+    $gambar = $_POST['gambar_lama'];
+
+    // Upload gambar baru jika ada
+    if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0) {
+        $ext = strtolower(pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($ext, $allowed)) {
+            if (!is_dir($uploadDir)) mkdir($uploadDir);
+            $newName = uniqid('img_', true) . '.' . $ext;
+            if (move_uploaded_file($_FILES['gambar']['tmp_name'], $uploadDir . $newName)) {
+                // Hapus gambar lama jika ada
+                if ($gambar && file_exists($uploadDir . $gambar)) unlink($uploadDir . $gambar);
+                $gambar = $newName;
+            }
+        }
+    }
+
+    if (updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar)) {
         $notif = 'Data berhasil diupdate!';
     } else {
         $notif = 'Gagal update data!';
@@ -36,6 +77,12 @@ if (isset($_POST['update'])) {
 // Hapus data
 if (isset($_GET['hapus'])) {
     $id = $_GET['hapus'];
+    // Hapus gambar dari folder
+    $q = mysqli_query($conn, "SELECT gambar FROM barang WHERE id=$id");
+    $d = mysqli_fetch_assoc($q);
+    if ($d && $d['gambar'] && file_exists($uploadDir . $d['gambar'])) {
+        unlink($uploadDir . $d['gambar']);
+    }
     if (mysqli_query($conn, "DELETE FROM barang WHERE id=$id")) {
         $notif = 'Data berhasil dihapus!';
     } else {
@@ -61,29 +108,36 @@ if (!empty($search)) {
 }
 
 // Tambahan function untuk tambah dan update barang
-function tambahBarang($conn, $nama, $jumlah, $harga) {
-    return mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga) VALUES ('$nama', '$jumlah', '$harga')");
+function tambahBarang($conn, $nama, $jumlah, $harga, $gambar) {
+    $gambar = mysqli_real_escape_string($conn, $gambar);
+    return mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga, gambar) VALUES ('$nama', '$jumlah', '$harga', '$gambar')");
 }
 
-function updateBarang($conn, $id, $nama, $jumlah, $harga) {
-    return mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga' WHERE id=$id");
+function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
+    $gambar = mysqli_real_escape_string($conn, $gambar);
+    return mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga', gambar='$gambar' WHERE id=$id");
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Data Barang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
-        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #333; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
-        h2 { text-align: center; margin-top: 10px; font-size: 30px; }
+        body { font-family: "Roboto Flex", sans-serif; font-optical-sizing: auto; font-weight: 300; font-style: normal; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); margin: 0; padding: 0; }
+        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #404040; font-family:'Poppins', 'Roboto', Arial, sans-serif; }
+        h2 { text-align: center; margin-top: 10px; font-size: 30px; color: #404040; }
         form { background: #fff; max-width: 400px; margin: 30px auto; padding: 24px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);}
         label { display: block; margin-top: 16px; font-size: 18px; }
         .search-info { text-align: center; color: #666; margin: 10px 0; font-size: 16px; }
         input[type="text"], input[type="number"] {font-size: 15px; width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
         button { margin-top: 22px; padding: 10px 24px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;}
         button:hover { background: #217dbb; }
-        table { margin: 40px auto; border-collapse: collapse; width: 90%; background: #fff; }
+        table { margin: 40px auto; border-collapse: collapse; width: 90%; background: #fff; box-shadow: 0 4px 24px rgba(52,152,219,0.10), 0 1.5px 6px rgba(44,62,80,0.07);}
         th, td { border: 1px solid #ccc; padding: 10px 14px; text-align: center; }
         th { background: #eee; }
         a { text-decoration: none; color: #3498db; }
@@ -91,6 +145,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         .header { background: #f2f2f2; text-align: center; font-size: 13px; }
         .tabel-row { font-size: large; transition: background 0.2s; }
         .tabel-row:hover { background: #e3f2fd; }
+        .img-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border:1px solid #eee; }
         /* Search Box */
         .search-container {
             max-width: 600px;
@@ -104,6 +159,10 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: box-shadow 0.2s;
+        }
+        .search-box:hover {
+            box-shadow: 0 8px 32px rgba(52,152,219,0.18), 0 3px 12px rgba(44,62,80,0.13);
         }
         .search-box input[type="text"] {
             flex: 1;
@@ -146,9 +205,59 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             text-align: center; min-width: 300px;
         }
         .modal-box button { margin: 0 12px; }
+        .custom-file {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .custom-file input[type="file"] {
+            opacity: 0;
+            width: 100%;
+            height: 40px;
+            position: absolute;
+            left: 0; top: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .custom-file label {
+            display: inline-block;
+            background: linear-gradient(90deg, #3498db 70%, #6dd5fa 120%);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 15px;
+            transition: background 0.2s;
+            margin-right: 12px;
+            z-index: 1;
+            position: relative;
+        }
+        .custom-file label:hover {
+            background: linear-gradient(90deg, #217dbb 60%, #3498db 100%);
+        }
+        .file-chosen {
+            font-size: 14px;
+            color: #2980b9;
+            vertical-align: middle;
+        }
+        /* Responsive Table */
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            th, td { text-align: left; }
+            tr { margin-bottom: 15px; }
+        }
     </style>
 </head>
 <body>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 30px 0 30px;">
+        <div style="color:#2980b9; font-size:17px; background:#eaf6fb; padding:8px 18px 8px 14px; border-radius:22px; box-shadow:0 2px 8px rgba(52,152,219,0.08); display:flex; align-items:center; gap:10px;">
+            <i class="fa fa-user-circle" style="font-size:22px;"></i>
+            <span>Login sebagai: <b><?= htmlspecialchars($_SESSION['username']) ?></b></span>
+        </div>
+        <a href="logout.php" style="display:flex; align-items:center; gap:8px; background:linear-gradient(90deg,#e74c3c 60%,#ff7675 100%); color:#fff; font-weight:bold; padding:8px 22px; border-radius:22px; box-shadow:0 2px 8px rgba(231,76,60,0.08); font-size:16px; text-decoration:none; transition:background 0.2s;">
+            <i class="fa fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
     <h1>Pendataan Barang TOKOKU</h1>
     <div id="notif" class="notif"></div>
     <div id="modal" class="modal-bg">
@@ -163,7 +272,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
     <div class="search-container">
         <form method="get" class="search-box">
             <input type="text" name="search" placeholder="Cari barang..." value="<?= htmlspecialchars($search) ?>">
-            <button type="submit">Cari</button>
+            <button type="submit"><i class="fa fa-search"></i> Cari</button>
             <?php if (!empty($search)): ?>
                 <a href="index.php" style="justify-content:center; align-items:center;font-size:10px; padding: 16px 16px; background: #e74c3c; color: white; text-decoration: none; border-radius: 4px;">Reset</a>
             <?php endif; ?>
@@ -173,29 +282,43 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         <?php endif; ?>
     </div>
 
-    <form method="post" autocomplete="off">
-        <h2><?= $edit ? 'Edit Barang' : 'Tambah Barang' ?></h2>
-        <?php if ($edit): ?>
-            <input type="hidden" name="id" value="<?= $edit['id'] ?>">
-        <?php endif; ?>
-        <label>Nama Barang</label>
-        <input type="text" name="nama" value="<?= $edit ? htmlspecialchars($edit['nama']) : '' ?>" required>
-        <label>Jumlah</label>
-        <input type="number" name="jumlah" value="<?= $edit ? $edit['jumlah'] : '' ?>" required>
-        <label>Harga</label>
-        <input type="number" name="harga" value="<?= $edit ? $edit['harga'] : '' ?>" required>
-        <button type="submit" name="<?= $edit ? 'update' : 'tambah' ?>">
-            <?= $edit ? 'Update' : 'Simpan' ?>
-        </button>
-        <?php if ($edit): ?>
-            <a href="index.php" style="margin-left:10px;">Batal</a>
-        <?php endif; ?>
-    </form>
+    <form method="post" autocomplete="off" enctype="multipart/form-data">
+    <h2><?= $edit ? 'Edit Barang' : 'Tambah Barang' ?></h2>
+    <?php if ($edit): ?>
+        <input type="hidden" name="id" value="<?= $edit['id'] ?>">
+    <?php endif; ?>
+    <label>Nama Barang</label>
+    <input type="text" name="nama" value="<?= $edit ? htmlspecialchars($edit['nama']) : '' ?>" required>
+    <label>Jumlah</label>
+    <input type="number" name="jumlah" value="<?= $edit ? $edit['jumlah'] : '' ?>" required>
+    <label>Harga</label>
+    <input type="number" name="harga" value="<?= $edit ? $edit['harga'] : '' ?>" required>
+    <label>Gambar</label>
+    <div class="custom-file">
+        <input type="file" name="gambar" id="gambar" accept="image/*" onchange="showFileName()" />
+        <label for="gambar" id="file-label"><i class="fa fa-upload"></i> Pilih Gambar</label>
+        <span id="file-chosen" class="file-chosen">Tidak ada file dipilih</span>
+    </div>
+    <?php if ($edit && $edit['gambar']): ?>
+        <div style="margin:10px 0;">
+            <img src="uploads/<?= htmlspecialchars($edit['gambar']) ?>" class="img-thumb">
+            <input type="hidden" name="gambar_lama" value="<?= htmlspecialchars($edit['gambar']) ?>">
+        </div>
+    <?php else: ?>
+        <input type="hidden" name="gambar_lama" value="">
+    <?php endif; ?>
+    <button type="submit" name="<?= $edit ? 'update' : 'tambah' ?>">
+        <i class="fa <?= $edit ? 'fa-edit' : 'fa-save' ?>"></i> <?= $edit ? 'Update' : 'Simpan' ?>
+    </button>
+    <?php if ($edit): ?>
+        <a href="index.php" style="margin-left:10px;">Batal</a>
+    <?php endif; ?>
+</form>
 
     <table>
         <caption><h2>Daftar Barang</h2></caption>
         <tr class="header">
-            <th>No</th><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Aksi</th>
+            <th>No</th><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Gambar</th><th>Aksi</th>
         </tr>
         <?php
         $no = 1;
@@ -211,8 +334,22 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
             <td><?= $row['jumlah'] ?></td>
             <td><?= number_format($row['harga']) ?></td>
             <td>
-                <a href="index.php?edit=<?= $row['id'] ?>">Edit</a> | 
-                <a href="#" class="hapus-link" data-id="<?= $row['id'] ?>">Hapus</a>
+                <?php if ($row['gambar']): ?>
+                    <img src="uploads/<?= htmlspecialchars($row['gambar']) ?>" class="img-thumb">
+                <?php else: ?>
+                    <span style="color:#aaa;">(Tidak ada gambar)</span>
+                <?php endif; ?>
+            </td>
+            <td>
+                <a href="detail.php?id=<?= $row['id'] ?>" style="color:#2980b9; font-weight:bold;">
+                    <i class="fa fa-eye"></i> Detail
+                </a> | 
+                <a href="index.php?edit=<?= $row['id'] ?>" style="color:#f39c12; font-weight:bold;">
+                    <i class="fa fa-edit"></i> Edit
+                </a> | 
+                <a href="#" class="hapus-link" data-id="<?= $row['id'] ?>" style="color:#e74c3c; font-weight:bold;">
+                    <i class="fa fa-trash"></i> Hapus
+                </a>
             </td>
         </tr>
         <?php 
@@ -220,7 +357,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         } else {
         ?>
         <tr>
-            <td colspan="5" style="text-align: center; color: #666; font-style: italic;">
+            <td colspan="6" style="text-align: center; color: #666; font-style: italic;">
                 <?= !empty($search) ? "Tidak ada data yang ditemukan untuk '$search'" : "Belum ada data barang" ?>
             </td>
         </tr>
@@ -233,7 +370,23 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga) {
         </div>
     <?php endif; ?>
 
+    <footer style="text-align:center; color:#888; margin:40px 0 10px 0;">
+        &copy; <?= date('Y') ?> TOKOKU. All rights reserved.
+    </footer>
+
     <script>
+        function showFileName() {
+        var input = document.getElementById('gambar');
+        var label = document.getElementById('file-label');
+        var chosen = document.getElementById('file-chosen');
+        if (input.files.length > 0) {
+            chosen.textContent = input.files[0].name;
+            label.style.background = "#27ae60";
+        } else {
+            chosen.textContent = "Tidak ada file dipilih";
+            label.style.background = "";
+        }
+    }
     // Notifikasi dari PHP
     <?php if (isset($_GET['notif'])): ?>
         window.addEventListener('DOMContentLoaded', function() {
