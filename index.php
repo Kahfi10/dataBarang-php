@@ -13,8 +13,11 @@ if (!$conn) die("Koneksi gagal: " . mysqli_connect_error());
 $notif = '';
 $uploadDir = "uploads/";
 
+// Cek role staf
+$isStaf = isset($_SESSION['role']) && $_SESSION['role'] === 'staf';
+
 // Tambah data
-if (isset($_POST['tambah'])) {
+if ($isStaf && isset($_POST['tambah'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
@@ -43,7 +46,7 @@ if (isset($_POST['tambah'])) {
 }
 
 // Update data
-if (isset($_POST['update'])) {
+if ($isStaf && isset($_POST['update'])) {
     $id = $_POST['id'];
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
@@ -75,7 +78,7 @@ if (isset($_POST['update'])) {
 }
 
 // Hapus data
-if (isset($_GET['hapus'])) {
+if ($isStaf && isset($_GET['hapus'])) {
     $id = $_GET['hapus'];
     // Hapus gambar dari folder
     $q = mysqli_query($conn, "SELECT gambar FROM barang WHERE id=$id");
@@ -129,7 +132,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body { font-family: "Roboto Flex", sans-serif; font-optical-sizing: auto; font-weight: 300; font-style: normal; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); margin: 0; padding: 0; }
-        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #404040; font-family:'Poppins', 'Roboto', Arial, sans-serif; }
+        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #404040; font-family:'Poppins', 'Roboto', Arial, sans-serif; font-weight: 1000; }
         h2 { text-align: center; margin-top: 10px; font-size: 30px; color: #404040; }
         form { background: #fff; max-width: 400px; margin: 30px auto; padding: 24px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);}
         label { display: block; margin-top: 16px; font-size: 18px; }
@@ -253,12 +256,26 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
         <div style="color:#2980b9; font-size:17px; background:#eaf6fb; padding:8px 18px 8px 14px; border-radius:22px; box-shadow:0 2px 8px rgba(52,152,219,0.08); display:flex; align-items:center; gap:10px;">
             <i class="fa fa-user-circle" style="font-size:22px;"></i>
             <span>Login sebagai: <b><?= htmlspecialchars($_SESSION['username']) ?></b></span>
+            <a href="profile.php" style="margin-left:16px; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(90deg,#6dd5fa 60%,#3498db 100%); color:#fff; font-weight:600; padding:6px 18px; border-radius:18px; font-size:15px; text-decoration:none; box-shadow:0 2px 8px rgba(52,152,219,0.08); transition:background 0.2s;">
+                <i class="fa fa-id-badge"></i> Profil
+            </a>
         </div>
         <a href="logout.php" style="display:flex; align-items:center; gap:8px; background:linear-gradient(90deg,#e74c3c 60%,#ff7675 100%); color:#fff; font-weight:bold; padding:8px 22px; border-radius:22px; box-shadow:0 2px 8px rgba(231,76,60,0.08); font-size:16px; text-decoration:none; transition:background 0.2s;">
             <i class="fa fa-sign-out-alt"></i> Logout
         </a>
     </div>
-    <h1>Pendataan Barang TOKOKU</h1>
+    <div style="display:flex; justify-content:center; gap:18px; margin:24px 0 0 0;">
+    <a href="kategori.php" style="background:linear-gradient(90deg,#f1c40f 60%,#f9e79f 100%); color:#444; font-weight:600; padding:7px 22px; border-radius:18px; font-size:15px; text-decoration:none; box-shadow:0 2px 8px rgba(241,196,15,0.08); transition:background 0.2s;">
+        <i class="fa fa-tags"></i> Kategori
+    </a>
+    <a href="supplier.php" style="background:linear-gradient(90deg,#16a085 60%,#48c9b0 100%); color:#fff; font-weight:600; padding:7px 22px; border-radius:18px; font-size:15px; text-decoration:none; box-shadow:0 2px 8px rgba(22,160,133,0.08); transition:background 0.2s;">
+        <i class="fa fa-truck"></i> Supplier
+    </a>
+    <a href="about.php" style="background:linear-gradient(90deg,#8e44ad 60%,#d2b4de 100%); color:#fff; font-weight:600; padding:7px 22px; border-radius:18px; font-size:15px; text-decoration:none; box-shadow:0 2px 8px rgba(142,68,173,0.08); transition:background 0.2s;">
+        <i class="fa fa-info-circle"></i> Tentang
+    </a>
+    </div>
+    <h1>PENDATAAN BARANG TOKOKU</h1>
     <div id="notif" class="notif"></div>
     <div id="modal" class="modal-bg">
         <div class="modal-box">
@@ -282,38 +299,40 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
         <?php endif; ?>
     </div>
 
+    <?php if ($isStaf): ?>
     <form method="post" autocomplete="off" enctype="multipart/form-data">
-    <h2><?= $edit ? 'Edit Barang' : 'Tambah Barang' ?></h2>
-    <?php if ($edit): ?>
-        <input type="hidden" name="id" value="<?= $edit['id'] ?>">
-    <?php endif; ?>
-    <label>Nama Barang</label>
-    <input type="text" name="nama" value="<?= $edit ? htmlspecialchars($edit['nama']) : '' ?>" required>
-    <label>Jumlah</label>
-    <input type="number" name="jumlah" value="<?= $edit ? $edit['jumlah'] : '' ?>" required>
-    <label>Harga</label>
-    <input type="number" name="harga" value="<?= $edit ? $edit['harga'] : '' ?>" required>
-    <label>Gambar</label>
-    <div class="custom-file">
-        <input type="file" name="gambar" id="gambar" accept="image/*" onchange="showFileName()" />
-        <label for="gambar" id="file-label"><i class="fa fa-upload"></i> Pilih Gambar</label>
-        <span id="file-chosen" class="file-chosen">Tidak ada file dipilih</span>
-    </div>
-    <?php if ($edit && $edit['gambar']): ?>
-        <div style="margin:10px 0;">
-            <img src="uploads/<?= htmlspecialchars($edit['gambar']) ?>" class="img-thumb">
-            <input type="hidden" name="gambar_lama" value="<?= htmlspecialchars($edit['gambar']) ?>">
+        <h2><?= $edit ? 'Edit Barang' : 'Tambah Barang' ?></h2>
+        <?php if ($edit): ?>
+            <input type="hidden" name="id" value="<?= $edit['id'] ?>">
+        <?php endif; ?>
+        <label>Nama Barang</label>
+        <input type="text" name="nama" value="<?= $edit ? htmlspecialchars($edit['nama']) : '' ?>" required>
+        <label>Jumlah</label>
+        <input type="number" name="jumlah" value="<?= $edit ? $edit['jumlah'] : '' ?>" required>
+        <label>Harga</label>
+        <input type="number" name="harga" value="<?= $edit ? $edit['harga'] : '' ?>" required>
+        <label>Gambar</label>
+        <div class="custom-file">
+            <input type="file" name="gambar" id="gambar" accept="image/*" onchange="showFileName()" />
+            <label for="gambar" id="file-label"><i class="fa fa-upload"></i> Pilih Gambar</label>
+            <span id="file-chosen" class="file-chosen">Tidak ada file dipilih</span>
         </div>
-    <?php else: ?>
-        <input type="hidden" name="gambar_lama" value="">
+        <?php if ($edit && $edit['gambar']): ?>
+            <div style="margin:10px 0;">
+                <img src="uploads/<?= htmlspecialchars($edit['gambar']) ?>" class="img-thumb">
+                <input type="hidden" name="gambar_lama" value="<?= htmlspecialchars($edit['gambar']) ?>">
+            </div>
+        <?php else: ?>
+            <input type="hidden" name="gambar_lama" value="">
+        <?php endif; ?>
+        <button type="submit" name="<?= $edit ? 'update' : 'tambah' ?>">
+            <i class="fa <?= $edit ? 'fa-edit' : 'fa-save' ?>"></i> <?= $edit ? 'Update' : 'Simpan' ?>
+        </button>
+        <?php if ($edit): ?>
+            <a href="index.php" style="margin-left:10px;">Batal</a>
+        <?php endif; ?>
+    </form>
     <?php endif; ?>
-    <button type="submit" name="<?= $edit ? 'update' : 'tambah' ?>">
-        <i class="fa <?= $edit ? 'fa-edit' : 'fa-save' ?>"></i> <?= $edit ? 'Update' : 'Simpan' ?>
-    </button>
-    <?php if ($edit): ?>
-        <a href="index.php" style="margin-left:10px;">Batal</a>
-    <?php endif; ?>
-</form>
 
     <table>
         <caption><h2>Daftar Barang</h2></caption>
@@ -324,7 +343,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
         $no = 1;
         $barang = mysqli_query($conn, "SELECT * FROM barang $searchQuery ORDER BY id DESC");
         $totalRows = mysqli_num_rows($barang);
-        
+
         if ($totalRows > 0) {
             while ($row = mysqli_fetch_assoc($barang)):
         ?>
@@ -343,13 +362,16 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
             <td>
                 <a href="detail.php?id=<?= $row['id'] ?>" style="color:#2980b9; font-weight:bold;">
                     <i class="fa fa-eye"></i> Detail
-                </a> | 
+                </a>
+                <?php if ($isStaf): ?>
+                 | 
                 <a href="index.php?edit=<?= $row['id'] ?>" style="color:#f39c12; font-weight:bold;">
                     <i class="fa fa-edit"></i> Edit
                 </a> | 
                 <a href="#" class="hapus-link" data-id="<?= $row['id'] ?>" style="color:#e74c3c; font-weight:bold;">
                     <i class="fa fa-trash"></i> Hapus
                 </a>
+                <?php endif; ?>
             </td>
         </tr>
         <?php 

@@ -18,9 +18,10 @@ if (isset($_POST['login'])) {
     $result = mysqli_query($conn, "SELECT * FROM user WHERE username='$username' LIMIT 1");
     $user = mysqli_fetch_assoc($result);
 
-    if ($user && $password === $user['password']) { // Untuk produksi, gunakan password_verify
+    if ($user && $password === $user['password']) {
         $_SESSION['login'] = true;
         $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
         header("Location: index.php");
         exit;
     } else {
@@ -33,6 +34,7 @@ if (isset($_POST['signup'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];
     $password2 = $_POST['password2'];
+    $role = isset($_POST['role']) ? $_POST['role'] : 'pengunjung';
 
     if ($password !== $password2) {
         $error = "Konfirmasi password tidak cocok!";
@@ -41,7 +43,7 @@ if (isset($_POST['signup'])) {
         if (mysqli_num_rows($cek) > 0) {
             $error = "Username sudah terdaftar!";
         } else {
-            $query = mysqli_query($conn, "INSERT INTO user (username, password) VALUES ('$username', '$password')");
+            $query = mysqli_query($conn, "INSERT INTO user (username, password, role) VALUES ('$username', '$password', '$role')");
             if ($query) {
                 $success = "Registrasi berhasil! Silakan login.";
             } else {
@@ -184,7 +186,7 @@ if (isset($_POST['signup'])) {
 
         <!-- Login Form -->
         <form id="login-form" method="post" autocomplete="off" <?= isset($_POST['signup']) ? 'class="hidden"' : '' ?>>
-            <h2><i class="fa fa-sign-in-alt"></i> Login Staf</h2>
+            <h2><i class="fa fa-sign-in-alt"></i> LOGIN</h2>
             <div class="icon-input">
                 <i class="fa fa-user"></i>
                 <input type="text" name="username" placeholder="Username" required autofocus>
@@ -199,7 +201,7 @@ if (isset($_POST['signup'])) {
 
         <!-- Sign Up Form -->
         <form id="signup-form" method="post" autocomplete="off" <?= isset($_POST['signup']) ? '' : 'class="hidden"' ?>>
-            <h2><i class="fa fa-user-plus"></i> Sign Up Staf</h2>
+            <h2><i class="fa fa-user-plus"></i> SIGN UP</h2>
             <div class="icon-input">
                 <i class="fa fa-user"></i>
                 <input type="text" name="username" placeholder="Username" required>
@@ -212,6 +214,11 @@ if (isset($_POST['signup'])) {
                 <i class="fa fa-lock"></i>
                 <input type="password" name="password2" placeholder="Konfirmasi Password" required>
             </div>
+            <label style="margin-top:18px; font-size:15px; color: #303030;">Daftar sebagai</label>
+            <select name="role" required style="width:100%;padding:8px 10px;border-radius:5px;border:1px solid #b3c6e0;font-size:15px;margin-top:6px;margin-right: 15px;">
+                <option value="pengunjung">Pengunjung</option>
+                <option value="staf">Staf</option>
+            </select>
             <button type="submit" name="signup"><i class="fa fa-user-plus"></i> Sign Up</button>
             <span class="switch-link" onclick="showForm('login-form')">Sudah punya akun? Login di sini</span>
         </form>
