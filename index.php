@@ -16,11 +16,27 @@ $uploadDir = "uploads/";
 // Cek role staf
 $isStaf = isset($_SESSION['role']) && $_SESSION['role'] === 'staf';
 
+// Ambil semua kategori untuk pilihan di form
+$kategoriList = [];
+$qKategori = mysqli_query($conn, "SELECT * FROM kategori ORDER BY nama_kategori ASC");
+while ($rowKat = mysqli_fetch_assoc($qKategori)) {
+    $kategoriList[] = $rowKat;
+}
+
+// Ambil semua supplier untuk pilihan di form
+$supplierList = [];
+$qSupplier = mysqli_query($conn, "SELECT * FROM supplier ORDER BY nama_supplier ASC");
+while ($rowSup = mysqli_fetch_assoc($qSupplier)) {
+    $supplierList[] = $rowSup;
+}
+
 // Tambah data
 if ($isStaf && isset($_POST['tambah'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
+    $kategori_id = $_POST['kategori_id'];
+    $supplier_id = $_POST['supplier_id'];
     $gambar = '';
 
     // Upload gambar jika ada
@@ -36,7 +52,7 @@ if ($isStaf && isset($_POST['tambah'])) {
         }
     }
 
-    if (tambahBarang($conn, $nama, $jumlah, $harga, $gambar)) {
+    if (tambahBarang($conn, $nama, $jumlah, $harga, $gambar, $kategori_id, $supplier_id)) {
         $notif = 'Data berhasil ditambahkan!';
     } else {
         $notif = 'Gagal menambah data!';
@@ -51,6 +67,8 @@ if ($isStaf && isset($_POST['update'])) {
     $nama = $_POST['nama'];
     $jumlah = $_POST['jumlah'];
     $harga = $_POST['harga'];
+    $kategori_id = $_POST['kategori_id'];
+    $supplier_id = $_POST['supplier_id'];
     $gambar = $_POST['gambar_lama'];
 
     // Upload gambar baru jika ada
@@ -68,7 +86,7 @@ if ($isStaf && isset($_POST['update'])) {
         }
     }
 
-    if (updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar)) {
+    if (updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id, $supplier_id)) {
         $notif = 'Data berhasil diupdate!';
     } else {
         $notif = 'Gagal update data!';
@@ -111,14 +129,18 @@ if (!empty($search)) {
 }
 
 // Tambahan function untuk tambah dan update barang
-function tambahBarang($conn, $nama, $jumlah, $harga, $gambar) {
+function tambahBarang($conn, $nama, $jumlah, $harga, $gambar, $kategori_id, $supplier_id) {
     $gambar = mysqli_real_escape_string($conn, $gambar);
-    return mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga, gambar) VALUES ('$nama', '$jumlah', '$harga', '$gambar')");
+    $kategori_id = intval($kategori_id);
+    $supplier_id = intval($supplier_id);
+    return mysqli_query($conn, "INSERT INTO barang (nama, jumlah, harga, gambar, kategori_id, supplier_id) VALUES ('$nama', '$jumlah', '$harga', '$gambar', '$kategori_id', '$supplier_id')");
 }
 
-function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
+function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id, $supplier_id) {
     $gambar = mysqli_real_escape_string($conn, $gambar);
-    return mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga', gambar='$gambar' WHERE id=$id");
+    $kategori_id = intval($kategori_id);
+    $supplier_id = intval($supplier_id);
+    return mysqli_query($conn, "UPDATE barang SET nama='$nama', jumlah='$jumlah', harga='$harga', gambar='$gambar', kategori_id='$kategori_id', supplier_id='$supplier_id' WHERE id=$id");
 }
 ?>
 <!DOCTYPE html>
@@ -311,6 +333,48 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
         <input type="number" name="jumlah" value="<?= $edit ? $edit['jumlah'] : '' ?>" required>
         <label>Harga</label>
         <input type="number" name="harga" value="<?= $edit ? $edit['harga'] : '' ?>" required>
+        <label>Kategori</label>
+        <select name="kategori_id" required style="
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid #f1c40f;
+            background: linear-gradient(90deg,#fffbe6 60%,#f9e79f 100%);
+            font-size: 16px;
+            font-weight: 600;
+            color: #b7950b;
+            margin-top: 6px;
+            box-shadow: 0 2px 8px rgba(241,196,15,0.08);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        " onfocus="this.style.borderColor='#f39c12';this.style.boxShadow='0 2px 12px rgba(241,196,15,0.18)';" onblur="this.style.borderColor='#f1c40f';this.style.boxShadow='0 2px 8px rgba(241,196,15,0.08)';">
+            <option value="">-- Pilih Kategori --</option>
+            <?php foreach ($kategoriList as $kat): ?>
+                <option value="<?= $kat['id'] ?>" <?= ($edit && $edit['kategori_id'] == $kat['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($kat['nama_kategori']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <label>Supplier</label>
+        <select name="supplier_id" required style="
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid #16a085;
+            background: linear-gradient(90deg,#e8f8f5 60%,#48c9b0 100%);
+            font-size: 16px;
+            font-weight: 600;
+            color: #117864;
+            margin-top: 6px;
+            box-shadow: 0 2px 8px rgba(22,160,133,0.08);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        " onfocus="this.style.borderColor='#48c9b0';this.style.boxShadow='0 2px 12px rgba(22,160,133,0.18)';" onblur="this.style.borderColor='#16a085';this.style.boxShadow='0 2px 8px rgba(22,160,133,0.08)';">
+            <option value="">-- Pilih Supplier --</option>
+            <?php foreach ($supplierList as $sup): ?>
+                <option value="<?= $sup['id'] ?>" <?= ($edit && $edit['supplier_id'] == $sup['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($sup['nama_supplier']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
         <label>Gambar</label>
         <div class="custom-file">
             <input type="file" name="gambar" id="gambar" accept="image/*" onchange="showFileName()" />
@@ -337,11 +401,15 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
     <table>
         <caption><h2>Daftar Barang</h2></caption>
         <tr class="header">
-            <th>No</th><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Gambar</th><th>Aksi</th>
+            <th>No</th><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Kategori</th><th>Supplier</th><th>Gambar</th><th>Aksi</th>
         </tr>
         <?php
         $no = 1;
-        $barang = mysqli_query($conn, "SELECT * FROM barang $searchQuery ORDER BY id DESC");
+        $barang = mysqli_query($conn, "SELECT b.*, k.nama_kategori, s.nama_supplier 
+            FROM barang b 
+            LEFT JOIN kategori k ON b.kategori_id=k.id 
+            LEFT JOIN supplier s ON b.supplier_id=s.id 
+            $searchQuery ORDER BY b.id DESC");
         $totalRows = mysqli_num_rows($barang);
 
         if ($totalRows > 0) {
@@ -352,6 +420,8 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
             <td><?= htmlspecialchars($row['nama']) ?></td>
             <td><?= $row['jumlah'] ?></td>
             <td><?= number_format($row['harga']) ?></td>
+            <td><?= htmlspecialchars($row['nama_kategori'] ?? '-') ?></td>
+            <td><?= htmlspecialchars($row['nama_supplier'] ?? '-') ?></td>
             <td>
                 <?php if ($row['gambar']): ?>
                     <img src="uploads/<?= htmlspecialchars($row['gambar']) ?>" class="img-thumb">
@@ -379,7 +449,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar) {
         } else {
         ?>
         <tr>
-            <td colspan="6" style="text-align: center; color: #666; font-style: italic;">
+            <td colspan="8" style="text-align: center; color: #666; font-style: italic;">
                 <?= !empty($search) ? "Tidak ada data yang ditemukan untuk '$search'" : "Belum ada data barang" ?>
             </td>
         </tr>
