@@ -153,83 +153,252 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: "Roboto Flex", sans-serif; font-optical-sizing: auto; font-weight: 300; font-style: normal; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); margin: 0; padding: 0; }
-        h1 { text-align: center; margin-top: 20px; font-size: 40px; color: #404040; font-family:'Poppins', 'Roboto', Arial, sans-serif; font-weight: 1000; }
-        h2 { text-align: center; margin-top: 10px; font-size: 30px; color: #404040; }
-        form { background: #fff; max-width: 400px; margin: 30px auto; padding: 24px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);}
-        label { display: block; margin-top: 16px; font-size: 18px; }
-        .search-info { text-align: center; color: #666; margin: 10px 0; font-size: 16px; }
-        input[type="text"], input[type="number"] {font-size: 15px; width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
-        button { margin-top: 22px; padding: 10px 24px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 15px;}
-        button:hover { background: #217dbb; }
-        table { margin: 40px auto; border-collapse: collapse; width: 90%; background: #fff; box-shadow: 0 4px 24px rgba(52,152,219,0.10), 0 1.5px 6px rgba(44,62,80,0.07);}
-        th, td { border: 1px solid #ccc; padding: 10px 14px; text-align: center; }
-        th { background: #eee; }
-        a { text-decoration: none; color: #3498db; }
-        a:hover { text-decoration: underline; }
-        .header { background: #f2f2f2; text-align: center; font-size: 13px; }
-        .tabel-row { font-size: large; transition: background 0.2s; }
-        .tabel-row:hover { background: #e3f2fd; }
-        .img-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border:1px solid #eee; }
-        /* Search Box */
+        body {
+            font-family: 'San Francisco', 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: linear-gradient(120deg, #f8fafc 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 0;
+            color: #222;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 38px;
+            color: #444;
+            font-family: 'San Francisco', 'Segoe UI', Arial, sans-serif;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 26px;
+            color: #222;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        form {
+            background: #fff;
+            max-width: 420px;
+            margin: 32px auto;
+            padding: 28px 22px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.07), 0 1.5px 6px rgba(44,62,80,0.07);
+            border: 1px solid #e5e5ea;
+            animation: fadeIn 0.7s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        label {
+            display: block;
+            margin-top: 18px;
+            font-size: 17px;
+            color: #555;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        input[type="text"], input[type="number"], select {
+            font-size: 16px;
+            width: 100%;
+            padding: 12px 14px;
+            margin-top: 7px;
+            border: 1.5px solid #e5e5ea;
+            border-radius: 12px;
+            box-sizing: border-box;
+            background: #f7f7fa;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #007aff;
+            box-shadow: 0 2px 12px rgba(0,122,255,0.10);
+            background: #fff;
+        }
+        button {
+            margin-top: 26px;
+            padding: 12px 0;
+            width: 100%;
+            background: linear-gradient(90deg, #007aff 60%, #5ac8fa 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,122,255,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #005ecb 60%, #007aff 100%);
+            box-shadow: 0 4px 16px rgba(0,122,255,0.13);
+        }
+        table {
+            margin: 44px auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 94%;
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.07), 0 1.5px 6px rgba(44,62,80,0.07);
+            border: 1px solid #e5e5ea;
+        }
+        th, td {
+            border-bottom: 1px solid #e5e5ea;
+            padding: 14px 16px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background: #f7f7fa;
+            color: #007aff;
+            font-weight: 700;
+            font-size: 17px;
+            letter-spacing: 0.2px;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        a {
+            text-decoration: none;
+            color: #007aff;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        a:hover {
+            color: #005ecb;
+            text-decoration: underline;
+        }
+        .header {
+            background: #f2f2f7;
+            text-align: center;
+            font-size: 14px;
+        }
+        .tabel-row {
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        .tabel-row:hover {
+            background: #f2f2f7;
+        }
+        .img-thumb {
+            width: 54px;
+            height: 54px;
+            object-fit: cover;
+            border-radius: 10px;
+            border:1.5px solid #e5e5ea;
+            background: #f7f7fa;
+        }
         .search-container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 24px auto;
             padding: 0 20px;
         }
         .search-box {
             display: flex;
+            align-items: center;
             gap: 10px;
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            transition: box-shadow 0.2s;
+            background: #f7f7fa;
+            padding: 12px 18px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,122,255,0.07);
+            border: 1.5px solid #e5e5ea;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            margin-bottom: 8px;
         }
-        .search-box:hover {
-            box-shadow: 0 8px 32px rgba(52,152,219,0.18), 0 3px 12px rgba(44,62,80,0.13);
+        .search-box:focus-within {
+            border-color: #007aff;
+            box-shadow: 0 4px 18px rgba(0,122,255,0.13);
         }
         .search-box input[type="text"] {
             flex: 1;
             margin-top: 0;
             font-size: 16px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e5ea;
+            background: #fff;
+            padding: 12px 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            color: #222;
+        }
+        .search-box input[type="text"]:focus {
+            border-color: #007aff;
+            box-shadow: 0 2px 12px rgba(0,122,255,0.10);
+            background: #f7faff;
         }
         .search-box button {
             margin-top: 0;
-            padding: 8px 16px;
-            background: #27ae60;
+            padding: 10px 22px;
+            background: linear-gradient(90deg, #007aff 60%, #5ac8fa 100%);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            width: 30%;
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,122,255,0.08);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 3px;
         }
         .search-box button:hover {
-            background: #219a52;
+            background: linear-gradient(90deg, #005ecb 60%, #007aff 100%);
+            box-shadow: 0 4px 16px rgba(0,122,255,0.13);
+        }
+        .search-box a {
+            padding: 10px 18px;
+            background: linear-gradient(90deg,#e74c3c 60%,#ff7675 100%);
+            color: #fff !important;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(231,76,60,0.08);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            margin-left: 4px;
+        }
+        .search-box a:hover {
+            background: linear-gradient(90deg,#c0392b 60%,#e74c3c 100%);
         }
         .search-info {
             text-align: center;
-            color: #666;
-            margin: 10px 0;
+            color: #007aff;
+            font-size: 15px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-style: italic;
+            letter-spacing: 0.2px;
         }
-        /* Notifikasi */
         .notif {
             display: none;
             position: fixed;
             top: 30px; left: 50%; transform: translateX(-50%);
-            background: #4caf50; color: #fff; padding: 16px 32px;
-            border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+            background: #34c759; color: #fff; padding: 16px 32px;
+            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.13);
             font-size: 18px; z-index: 1000;
             animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            border: 1.5px solid #e5e5ea;
         }
-        .notif.error { background: #e74c3c; }
+        .notif.error { background: #ff3b30; }
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
         /* Modal */
         .modal-bg {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.25); justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.18); justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #fff; padding: 28px 32px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-            text-align: center; min-width: 300px;
+            background: #fff; padding: 32px 36px; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            text-align: center; min-width: 320px; border: 1.5px solid #e5e5ea;
         }
-        .modal-box button { margin: 0 12px; }
+        .modal-box button { margin: 0 14px; border-radius: 10px; }
         .custom-file {
             position: relative;
             margin-bottom: 10px;
@@ -237,7 +406,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
         .custom-file input[type="file"] {
             opacity: 0;
             width: 100%;
-            height: 40px;
+            height: 44px;
             position: absolute;
             left: 0; top: 0;
             cursor: pointer;
@@ -245,31 +414,40 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
         }
         .custom-file label {
             display: inline-block;
-            background: linear-gradient(90deg, #3498db 70%, #6dd5fa 120%);
+            background: linear-gradient(90deg, #007aff 70%, #5ac8fa 120%);
             color: #fff;
-            padding: 10px 18px;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
             font-size: 15px;
             transition: background 0.2s;
             margin-right: 12px;
             z-index: 1;
             position: relative;
+            border: 1.5px solid #e5e5ea;
         }
         .custom-file label:hover {
-            background: linear-gradient(90deg, #217dbb 60%, #3498db 100%);
+            background: linear-gradient(90deg, #005ecb 60%, #007aff 100%);
         }
         .file-chosen {
-            font-size: 14px;
-            color: #2980b9;
+            font-size: 15px;
+            color: #007aff;
             vertical-align: middle;
+            margin-left: 8px;
         }
-        /* Responsive Table */
         @media (max-width: 700px) {
             table, thead, tbody, th, td, tr { display: block; }
             th, td { text-align: left; }
             tr { margin-bottom: 15px; }
+            form, .search-container { max-width: 98vw; }
+        }
+        footer {
+            text-align: center;
+            color: #aaa;
+            margin: 40px 0 10px 0;
+            font-size: 15px;
+            letter-spacing: 0.2px;
         }
     </style>
 </head>
@@ -344,6 +522,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
             font-weight: 600;
             color: #b7950b;
             margin-top: 6px;
+            margin-left: 5px;
             box-shadow: 0 2px 8px rgba(241,196,15,0.08);
             transition: border-color 0.2s, box-shadow 0.2s;
         " onfocus="this.style.borderColor='#f39c12';this.style.boxShadow='0 2px 12px rgba(241,196,15,0.18)';" onblur="this.style.borderColor='#f1c40f';this.style.boxShadow='0 2px 8px rgba(241,196,15,0.08)';">
@@ -365,6 +544,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
             font-weight: 600;
             color: #117864;
             margin-top: 6px;
+            margin-left: 5px;
             box-shadow: 0 2px 8px rgba(22,160,133,0.08);
             transition: border-color 0.2s, box-shadow 0.2s;
         " onfocus="this.style.borderColor='#48c9b0';this.style.boxShadow='0 2px 12px rgba(22,160,133,0.18)';" onblur="this.style.borderColor='#16a085';this.style.boxShadow='0 2px 8px rgba(22,160,133,0.08)';">
@@ -462,7 +642,7 @@ function updateBarang($conn, $id, $nama, $jumlah, $harga, $gambar, $kategori_id,
         </div>
     <?php endif; ?>
 
-    <footer style="text-align:center; color:#888; margin:40px 0 10px 0;">
+    <footer style="text-align:center; color:#aaa; margin:40px 0 10px 0;">
         &copy; <?= date('Y') ?> TOKOKU. All rights reserved.
     </footer>
 

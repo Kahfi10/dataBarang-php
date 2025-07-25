@@ -72,11 +72,11 @@ $kategori = mysqli_query($conn, "SELECT * FROM kategori ORDER BY id DESC");
         h2 { text-align:center; color:#2980b9; margin-bottom:24px;}
         form { margin-bottom: 24px; }
         label { font-size:16px; }
-        input[type="text"] { width:100%; padding:8px 12px; border:1px solid #b3c6e0; border-radius:5px; font-size:15px; margin-top:6px;}
+        input[type="text"] { width:95%; padding:8px 12px; border:1px solid #b3c6e0; border-radius:5px; font-size:15px; margin-top:6px;}
         button { margin-top:12px; padding:8px 22px; background:#3498db; color:#fff; border:none; border-radius:5px; font-size:15px; cursor:pointer;}
         button:hover { background:#217dbb; }
         table { width:100%; border-collapse:collapse; margin-top:18px;}
-        th, td { border:1px solid #eee; padding:10px 12px; text-align:left;}
+        th, td {font-size: 16px; border:1px solid #eee; padding:10px 12px; text-align:left;}
         th { background:#f2f2f2;}
         .aksi a { margin-right:10px; color:#3498db; font-weight:bold;}
         .aksi a.hapus { color:#e74c3c;}
